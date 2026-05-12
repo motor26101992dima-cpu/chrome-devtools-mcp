@@ -295,5 +295,13 @@
   {
     "name": "category_experimental_third_party",
     "flagType": "boolean"
+  },
+  {
+    "name": "experimental_toon_format_present",
+    "flagType": "boolean"
+  },
+  {
+    "name": "experimental_toon_format",
+    "flagType": "boolean"
   }
 ]

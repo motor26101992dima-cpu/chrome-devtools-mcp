@@ -17,7 +17,7 @@ import type {McpContext} from './McpContext.js';
 import type {McpPage} from './McpPage.js';
 import {UncaughtError} from './PageCollector.js';
 import {TextSnapshot} from './TextSnapshot.js';
-import {DevTools, type Protocol} from './third_party/index.js';
+import {DevTools, toonEncode, type Protocol} from './third_party/index.js';
 import type {
   ConsoleMessage,
   ImageContent,
@@ -456,6 +456,7 @@ export class McpResponse implements Response {
   async handle(
     toolName: string,
     context: McpContext,
+    useToon = false,
   ): Promise<{
     content: Array<TextContent | ImageContent>;
     structuredContent: object;
@@ -674,20 +675,25 @@ export class McpResponse implements Response {
       }
     }
 
-    return this.format(toolName, context, {
-      detailedConsoleMessage,
-      consoleMessages,
-      snapshot,
-      detailedNetworkRequest,
-      networkRequests,
-      traceInsight: this.#attachedTraceInsight,
-      traceSummary: this.#attachedTraceSummary,
-      extensions,
-      lighthouseResult: this.#attachedLighthouseResult,
-      thirdPartyDeveloperTools,
-      webmcpTools,
-      errorMessage: this.#error?.message,
-    });
+    return this.format(
+      toolName,
+      context,
+      {
+        detailedConsoleMessage,
+        consoleMessages,
+        snapshot,
+        detailedNetworkRequest,
+        networkRequests,
+        traceInsight: this.#attachedTraceInsight,
+        traceSummary: this.#attachedTraceSummary,
+        extensions,
+        lighthouseResult: this.#attachedLighthouseResult,
+        thirdPartyDeveloperTools,
+        webmcpTools,
+        errorMessage: this.#error?.message,
+      },
+      useToon,
+    );
   }
 
   format(
@@ -707,6 +713,7 @@ export class McpResponse implements Response {
       webmcpTools?: WebMCPTool[];
       errorMessage?: string;
     },
+    useToon: boolean,
   ): {content: Array<TextContent | ImageContent>; structuredContent: object} {
     const structuredContent: {
       snapshot?: object;
@@ -953,9 +960,13 @@ Call ${handleDialog.name} to handle it before continuing.`);
         response.push(`Saved snapshot to ${data.snapshot}.`);
         structuredContent.snapshotFilePath = data.snapshot;
       } else {
-        response.push('## Latest page snapshot');
-        response.push(data.snapshot.toString());
         structuredContent.snapshot = data.snapshot.toJSON();
+        response.push('## Latest page snapshot');
+        response.push(
+          useToon
+            ? toonEncode(structuredContent.snapshot)
+            : data.snapshot.toString(),
+        );
       }
     }
 
@@ -988,8 +999,12 @@ Call ${handleDialog.name} to handle it before continuing.`);
         const paginatedRecord = Object.fromEntries(paginationData.items);
         const formatter = new HeapSnapshotFormatter(paginatedRecord);
 
-        response.push(formatter.toString());
         structuredContent.heapSnapshotData = formatter.toJSON();
+        response.push(
+          useToon
+            ? toonEncode(structuredContent.heapSnapshotData)
+            : formatter.toString(),
+        );
       }
       const nodes = this.#heapSnapshotOptions.nodes;
       if (nodes) {
@@ -1109,11 +1124,14 @@ Call ${handleDialog.name} to handle it before continuing.`);
         structuredContent.pagination = paginationData.pagination;
         response.push(...paginationData.info);
         if (data.networkRequests) {
-          structuredContent.networkRequests = [];
-          for (const formatter of paginationData.items) {
-            response.push(formatter.toString());
-            structuredContent.networkRequests.push(formatter.toJSON());
-          }
+          structuredContent.networkRequests = paginationData.items.map(i =>
+            i.toJSON(),
+          );
+          response.push(
+            ...(useToon
+              ? [toonEncode(structuredContent.networkRequests)]
+              : paginationData.items.map(i => i.toString())),
+          );
         }
       } else {
         response.push('No requests found.');
@@ -1131,11 +1149,15 @@ Call ${handleDialog.name} to handle it before continuing.`);
           this.#consoleDataOptions.pagination,
         );
         structuredContent.pagination = paginationData.pagination;
-        response.push(...paginationData.info);
-        response.push(...paginationData.items.map(item => item.toString()));
         structuredContent.consoleMessages = paginationData.items.map(item =>
           item.toJSON(),
         );
+        response.push(...paginationData.info);
+        if (useToon) {
+          response.push(toonEncode(structuredContent.consoleMessages));
+        } else {
+          response.push(...paginationData.items.map(item => item.toString()));
+        }
       } else {
         response.push('<no console messages found>');
       }

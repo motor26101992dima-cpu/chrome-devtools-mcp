@@ -169,6 +169,12 @@ export const cliOptions = {
     type: 'boolean',
     describe: 'Whether to output structured formatted content.',
   },
+  experimentalToonFormat: {
+    type: 'boolean',
+    describe:
+      'Whether to format structured data in text response using Token-Oriented Object Notation. Defaults to false which represents the embedded content as formatted JSON instead.',
+    hidden: true,
+  },
   experimentalIncludeAllPages: {
     type: 'boolean',
     describe:
@@ -293,7 +299,7 @@ export function parseArguments(
   const yargsInstance = yargs(hideBin(argv))
     .scriptName('npx chrome-devtools-mcp@latest')
     .options(cliOptions)
-    .check(args => {
+    .middleware(args => {
       // We can't set default in the options else
       // Yargs will complain
       if (
@@ -310,7 +316,6 @@ export function parseArguments(
         );
         args.usageStatistics = false;
       }
-      return true;
     })
     .example([
       [
