@@ -636,13 +636,13 @@ The Chrome DevTools MCP server supports the following configuration option:
   Additional arguments for Chrome. Only applies when Chrome is launched by chrome-devtools-mcp.
   - **Type:** array
 
-- **`--blocklist`**
-  Restricts network access by blocking specified URL patterns (uses https://urlpattern.spec.whatwg.org/). Silently detaches from targets with blocked URLs upon connection, and blocks runtime requests (including navigations and subresources). Supports comma-separated patterns.
-  - **Type:** string
+- **`--blockedUrlPattern`/ `--blocked-url-pattern`**
+  Restricts network access by blocking specified URL patterns (uses https://urlpattern.spec.whatwg.org/). Silently detaches from targets with blocked URLs upon connection, and blocks runtime requests (including navigations and subresources). Accepts an array of patterns.
+  - **Type:** array
 
-- **`--allowlist`**
-  Restricts network access by allowing only specified URL patterns (uses https://urlpattern.spec.whatwg.org/). Requires Chrome 149+. Silently detaches from targets with unallowed URLs upon connection, and blocks runtime requests (including navigations and subresources). Supports comma-separated patterns.
-  - **Type:** string
+- **`--allowedUrlPattern`/ `--allowed-url-pattern`**
+  Restricts network access by allowing only specified URL patterns (uses https://urlpattern.spec.whatwg.org/). Requires Chrome 149+. Silently detaches from targets with unallowed URLs upon connection, and blocks runtime requests (including navigations and subresources). Accepts an array of patterns.
+  - **Type:** array
 
 - **`--ignoreDefaultChromeArg`/ `--ignore-default-chrome-arg`**
   Explicitly disable default arguments for Chrome. Only applies when Chrome is launched by chrome-devtools-mcp.

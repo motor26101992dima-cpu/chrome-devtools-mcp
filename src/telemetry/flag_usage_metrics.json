@@ -297,11 +297,11 @@
     "flagType": "boolean"
   },
   {
-    "name": "blocklist_present",
+    "name": "blocked_url_pattern_present",
     "flagType": "boolean"
   },
   {
-    "name": "allowlist_present",
+    "name": "allowed_url_pattern_present",
     "flagType": "boolean"
   }
 ]
